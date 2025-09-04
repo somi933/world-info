@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Country Info Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #e0f7fa, #e3f2fd);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      background: #1976d2;
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .search-container {
+      margin: 30px;
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      padding: 10px;
+      font-size: 1rem;
+      border: 2px solid #1976d2;
+      border-radius: 8px;
+      outline: none;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      background: #1976d2;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+      max-width: 420px;
+      text-align: center;
+      margin-top: 20px;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    .flag {
+      width: 150px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .info p {
+      margin: 8px 0;
+      font-size: 1rem;
+      color: #333;
+    }
+    .error {
+      color: red;
+      margin-top: 20px;
+    }
+    .loading {
+      color: #1976d2;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>🌍 Country Info Finder</header>
+
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Enter country name...">
+    <button onclick="getCountry()">Search</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    const searchInput = document.getElementById('search');
+    const resultDiv = document.getElementById('result');
+
+    // Press Enter to search
+    searchInput.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        getCountry();
+      }
+    });
+
+    async function getCountry() {
+      const query = searchInput.value.trim();
+      resultDiv.innerHTML = '';
+
+      if (!query) {
+        resultDiv.innerHTML = '<p class="error">⚠️ Please enter a country name</p>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<p class="loading">⏳ Fetching data...</p>';
+
+      try {
+        const res = await fetch(`https://restcountries.com/v3.1/name/${query}?fullText=true`);
+        if (!res.ok) throw new Error('❌ Country not found. Try another spelling.');
+        const data = await res.json();
+        const country = data[0];
+
+        resultDiv.innerHTML = `
+          <div class="card">
+            <img src="${country.flags.png}" alt="Flag of ${country.name.common}" class="flag">
+            <h2>${country.name.common}</h2>
+            <div class="info">
+              <p><strong>Official Name:</strong> ${country.name.official}</p>
+              <p><strong>Capital:</strong> ${country.capital ? country.capital[0] : 'N/A'}</p>
+              <p><strong>Region:</strong> ${country.region} (${country.subregion || 'N/A'})</p>
+              <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
+              <p><strong>Languages:</strong> ${country.languages ? Object.values(country.languages).join(', ') : 'N/A'}</p>
+              <p><strong>Currencies:</strong> ${country.currencies ? Object.values(country.currencies).map(c => c.name).join(', ') : 'N/A'}</p>
+              <p><strong>Area:</strong> ${country.area.toLocaleString()} km²</p>
+              <p><strong>Timezones:</strong> ${country.timezones ? country.timezones.join(', ') : 'N/A'}</p>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
